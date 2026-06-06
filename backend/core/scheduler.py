@@ -400,13 +400,14 @@ def start_scheduler():
     settle_seconds = settings.SETTLEMENT_INTERVAL_SECONDS
 
     # Scan BTC markets every minute
-    scheduler.add_job(
-        scan_and_trade_job,
-        IntervalTrigger(seconds=scan_seconds),
-        id="market_scan",
-        replace_existing=True,
-        max_instances=1
-    )
+    if settings.BTC_ENABLED:
+        scheduler.add_job(
+            scan_and_trade_job,
+            IntervalTrigger(seconds=scan_seconds),
+            id="market_scan",
+            replace_existing=True,
+            max_instances=1
+        )
 
     # Check settlements every 2 minutes
     scheduler.add_job(
@@ -447,7 +448,8 @@ def start_scheduler():
         "weather_enabled": settings.WEATHER_ENABLED,
     })
 
-    asyncio.create_task(scan_and_trade_job())
+    if settings.BTC_ENABLED:
+        asyncio.create_task(scan_and_trade_job())
 
     if settings.WEATHER_ENABLED:
         asyncio.create_task(weather_scan_and_trade_job())
@@ -474,7 +476,8 @@ def is_scheduler_running() -> bool:
 async def run_manual_scan():
     """Trigger a manual market scan."""
     log_event("info", "Manual scan triggered")
-    await scan_and_trade_job()
+    if settings.BTC_ENABLED:
+        await scan_and_trade_job()
 
 
 async def run_manual_settlement():

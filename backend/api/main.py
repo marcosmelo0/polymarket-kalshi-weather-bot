@@ -497,11 +497,15 @@ async def run_scan(db: Session = Depends(get_db)):
         state.last_run = datetime.utcnow()
         db.commit()
 
-    log_event("info", "Manual scan triggered (BTC + Weather)")
+    log_event("info", "Manual scan triggered")
     await run_manual_scan()
 
-    signals = await scan_for_signals()
-    actionable = [s for s in signals if s.passes_threshold]
+    if settings.BTC_ENABLED:
+        signals = await scan_for_signals()
+        actionable = [s for s in signals if s.passes_threshold]
+    else:
+        signals = []
+        actionable = []
 
     result = {
         "status": "ok",
